@@ -8,33 +8,73 @@ namespace RecommenderSystem
     {
         static void Main(string[] args)
         {
-            // Get data from files
-            var fileHelper = new FileHelper();
-            var users = fileHelper.GetUsers();
-            var movies = fileHelper.GetMovies();
-            var ratings = fileHelper.GetRatings();
+            do
+            {
+                #region INIT
+                // Get data from files
+                var fileHelper = new FileHelper();
 
-            var usersCount = users.Count();
-            var moviesCount = movies.Count();
-            var ratingsCount = ratings.Count();
+                var users = fileHelper.GetUsers();
+                var movies = fileHelper.GetMovies();
+                var ratings = fileHelper.GetRatings();
 
-            var matrix = GetMatrix(ratings, ratingsCount, usersCount, moviesCount);
+                var usersCount = users.Count();
 
-            // ----------------- Create and Save similarityMatrix -----------------
-            //var similarityMatrix = GetCosineSimilarityMatrix(matrix, usersCount, moviesCount);
-            //fileHelper.SaveSimilarityMatrix(similarityMatrix, usersCount, moviesCount);
+                int targetUser;
 
-            var currentLine = fileHelper.ReadSaveSimilarityMatrix(1481);
-            var parsedLine = ParseMatrixSimilarityLine(currentLine, usersCount);
-            var mostSimilarUser = GetMostSimilarUser(parsedLine, 1481);
+                do
+                {
+                    Console.Write("Enter a userId between 1 and " + usersCount + ": ");
 
-            var t = true;
+                    if (int.TryParse(Console.ReadLine(), out targetUser) && targetUser > 0 && targetUser <= usersCount) break;
 
-            // TODO
-            // Trouver les recommendations d'un userId
+                    Console.WriteLine("Please enter a valid value!");
+
+                } while (true);
+
+                #endregion
+
+                // ----------------- Create and Save similarityMatrix -----------------
+                if (!fileHelper.CheckSimilaryMatrixFileExists())
+                {
+                    var moviesCount = movies.Count();
+
+                    var matrix = GetMatrix(ratings, usersCount, moviesCount);
+                    var similarityMatrix = GetCosineSimilarityMatrix(matrix, usersCount, moviesCount);
+
+                    Console.WriteLine("Processing data... This operation could take few minutes");
+                    Console.WriteLine();
+
+                    fileHelper.SaveSimilarityMatrix(similarityMatrix, usersCount, moviesCount);
+                }
+
+
+                var currentLine = fileHelper.ReadSaveSimilarityMatrix(targetUser);
+                var parsedLine = ParseMatrixSimilarityLine(currentLine, usersCount);
+                var mostSimilarUser = GetMostSimilarUser(parsedLine, targetUser);
+
+                Console.WriteLine("Most similar user id : " + mostSimilarUser);
+                Console.WriteLine();
+
+                var similarUserMovies = GetUserMovies(mostSimilarUser, ratings, movies);
+                var targetUserMovies = GetUserMovies(targetUser, ratings, movies);
+
+                var recommenderMovies = GetMoviesNeverSeen(targetUserMovies, similarUserMovies);
+
+                int count = 1;
+                foreach (var movie in recommenderMovies)
+                {
+                    Console.WriteLine(count++ + ". " + movie.Value);
+                }
+
+                Console.WriteLine();
+                Console.WriteLine("You have " + count + " movies in common with " + mostSimilarUser);
+                Console.WriteLine();
+
+            } while (true);            
         }
 
-        private static int[,] GetMatrix(IEnumerable<Rating> ratings, int ratingsCount, int usersCount, int moviesCount)
+        private static int[,] GetMatrix(IEnumerable<Rating> ratings, int usersCount, int moviesCount)
         {
             var matrix = new int[usersCount, moviesCount];
 
@@ -116,6 +156,38 @@ namespace RecommenderSystem
                     result = item.Key;
                 }
             }
+
+            return result;
+        }
+
+        private static Dictionary<int, string> GetUserMovies(int userId, IEnumerable<Rating> ratings, IEnumerable<Movie> movies)
+        {
+            var moviesTitle = new Dictionary<int, string>();
+
+            var userRatings = ratings.Where(x => x.UserId == userId);
+
+            foreach(var item in userRatings)
+            {
+                var movieId = item.MovieId;
+                var movie = movies.Where(x => x.MovieId == movieId).Single();
+
+                moviesTitle.Add(movie.MovieId, movie.MovieTitle);
+            }
+
+            return moviesTitle;
+        }
+
+        private static Dictionary<int, string> GetMoviesNeverSeen(Dictionary<int, string> targetUserMovies, Dictionary<int, string> similarUserMovies)
+        {
+            var result = new Dictionary<int, string>();
+
+            var res = similarUserMovies.Keys.Except(targetUserMovies.Keys);
+
+            foreach(var id in res)
+            {
+                result.Add(id, similarUserMovies.GetValueOrDefault(id));
+            }
+
 
             return result;
         }

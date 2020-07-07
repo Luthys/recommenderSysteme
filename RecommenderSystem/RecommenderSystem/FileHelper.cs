@@ -51,6 +51,13 @@ namespace RecommenderSystem
             }
         }
 
+        public bool CheckSimilaryMatrixFileExists()
+        {
+            var path = Environment.CurrentDirectory + "\\DataBase\\saveSimilarityMatrix.txt";
+
+            return File.Exists(path);
+        }
+
         public void SaveSimilarityMatrix(float[,] matrix, int usersCount, int moviesCount)
         {
             var path = Environment.CurrentDirectory + "..\\..\\..\\..\\DataBase\\saveSimilarityMatrix.txt";
