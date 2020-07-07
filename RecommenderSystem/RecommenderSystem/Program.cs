@@ -28,7 +28,7 @@ namespace RecommenderSystem
             var parsedLine = ParseMatrixSimilarityLine(currentLine, usersCount);
             var mostSimilarUser = GetMostSimilarUser(parsedLine, 1481);
 
-            var prout = true;
+            var t = true;
 
             // TODO
             // Trouver les recommendations d'un userId
