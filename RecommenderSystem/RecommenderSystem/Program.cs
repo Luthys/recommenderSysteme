@@ -22,7 +22,7 @@ namespace RecommenderSystem
 
             var similarityMatrix = GetCosineSimilarityMatrix(matrix, usersCount, moviesCount);
 
-            var toto = true;
+            var toto = false;
         }
 
         private static int[,] GetMatrix(IEnumerable<Rating> ratings, int ratingsCount, int usersCount, int moviesCount)
