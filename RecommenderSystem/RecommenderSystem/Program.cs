@@ -20,9 +20,18 @@ namespace RecommenderSystem
 
             var matrix = GetMatrix(ratings, ratingsCount, usersCount, moviesCount);
 
-            var similarityMatrix = GetCosineSimilarityMatrix(matrix, usersCount, moviesCount);
+            // ----------------- Create and Save similarityMatrix -----------------
+            //var similarityMatrix = GetCosineSimilarityMatrix(matrix, usersCount, moviesCount);
+            //fileHelper.SaveSimilarityMatrix(similarityMatrix, usersCount, moviesCount);
 
-            var toto = false;
+            var currentLine = fileHelper.ReadSaveSimilarityMatrix(1481);
+            var parsedLine = ParseMatrixSimilarityLine(currentLine, usersCount);
+            var mostSimilarUser = GetMostSimilarUser(parsedLine, 1481);
+
+            var prout = true;
+
+            // TODO
+            // Trouver les recommendations d'un userId
         }
 
         private static int[,] GetMatrix(IEnumerable<Rating> ratings, int ratingsCount, int usersCount, int moviesCount)
@@ -78,6 +87,37 @@ namespace RecommenderSystem
         private static float Magnitude(int[,] matrix, int userIdx)
         {
             return (float)Math.Sqrt(DotProduct(matrix, userIdx, userIdx));
+        }
+
+        private static Dictionary<int,float> ParseMatrixSimilarityLine(string line, int usersCount)
+        {
+            var result = new Dictionary<int, float>();
+
+            var tmp = line.Split("::");
+
+            for (var i = 0; i < tmp.Length; i++)
+            {
+                result.Add(i + 1, float.Parse(tmp[i]));
+            }
+
+            return result;
+        }
+
+        private static int GetMostSimilarUser(Dictionary<int, float> rates, int userIdTarget)
+        {
+            var maxValue = -1f;
+            var result = -1;
+
+            foreach (var item in rates)
+            {
+                if (item.Key != userIdTarget && item.Value > maxValue)
+                {
+                    maxValue = item.Value;
+                    result = item.Key;
+                }
+            }
+
+            return result;
         }
     }
 }

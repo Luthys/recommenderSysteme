@@ -50,5 +50,43 @@ namespace RecommenderSystem
                 return content;
             }
         }
+
+        public void SaveSimilarityMatrix(float[,] matrix, int usersCount, int moviesCount)
+        {
+            var path = Environment.CurrentDirectory + "..\\..\\..\\..\\DataBase\\saveSimilarityMatrix.txt";
+
+            using (var sw = File.AppendText(path))
+            {
+                for (var i = 0; i < usersCount; i++)
+                {
+                    for (int j = 0; j < moviesCount; j++)
+                    {
+                        if (j == moviesCount - 1) sw.Write(matrix[i, j]);
+                        else sw.Write(matrix[i, j] + "::");
+                    }
+
+                    sw.WriteLine();
+                }
+            }
+        }
+
+        public string ReadSaveSimilarityMatrix(int userId)
+        {
+            var path = Environment.CurrentDirectory + "\\DataBase\\saveSimilarityMatrix.txt";
+            string line;
+
+            using (var sr = new StreamReader(path))
+            {
+                
+                var count = 0;
+
+                while ((line = sr.ReadLine()) != null && count != userId - 1)
+                {
+                    count++;                 
+                }
+
+                return line;
+            }
+        }
     }
 }
